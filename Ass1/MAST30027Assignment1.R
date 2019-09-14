@@ -82,17 +82,20 @@ etaCI = c(t%*%betahat-qnorm(0.975)*sqrt(t(t)%*%variance%*%t),
 
 
 #Q1e
-str(orings)
 
-plot(damage/6 ~ temp, orings, xlim=c(25,85), ylim=c(0,1),
-     xlab="Temperature", ylab="Prob of damage")
+#Plot the data
+plot(damage/6 ~ temp, orings, xlim=c(25,85), ylim=c(0,1),xlab="Temperature", ylab="Prob of damage")
 x <- seq(25,85,1)
-ilogit <- function(x) exp(x)/(1+exp(x))
+#use the glm with logit link to fit the model
 logitmod <- glm(cbind(damage,6-damage) ~ temp, family=binomial, orings)
 (betahatLogit=logitmod$coefficients)
 lines(x, ilogit(betahatLogit[1] + betahatLogit[2]*x), col="red",)
+
+#use probit link to fit the model
 lines(x, pnorm(betahat[1] + betahat[2]*x), col="green")
-legend(60,1,legend = c("logit","inverse standard normal"), col = c("red","green"),lty=1)
+
+#add legend
+legend(60,1,legend = c("logit model","probit model"), col = c("red","green"),lty=1)
 
 
 
