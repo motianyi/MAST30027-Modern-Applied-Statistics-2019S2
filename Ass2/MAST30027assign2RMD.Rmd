@@ -1,0 +1,80 @@
+---
+title: "Assignment2"
+author: "Tianyi Mo"
+date: "September 15,2019"
+output:
+  pdf_document: default
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+
+```{r}
+dataset = read.delim("assign2.txt", header = TRUE, sep = " ")
+dataset['prosocial_action'] = (dataset$prosoc_left == dataset$pulled_left)
+data1 = dataset[dataset$actor == 1,]
+data2 = dataset[dataset$actor == 2,]
+data3 = dataset[dataset$actor == 3,]
+data4 = dataset[dataset$actor == 4,]
+data5 = dataset[dataset$actor == 5,]
+data6 = dataset[dataset$actor == 6,]
+data7 = dataset[dataset$actor == 7,]
+```
+Using poisson regression to test three way contengency table
+```{r long_output}
+library(ggplot2)
+prosocial = xtabs( ~ actor,prosocial_action, data = dataset)
+prosocial_percentage = transform(prosocial, Freq=Freq/72)
+
+ggplot(data=prosocial_percentage, aes(x=actor, y=Freq))
+geom_bar(stat="identity", color="blue", fill="blue",width = 0.5)
+geom_hline(yintercept=0.5, linetype=1, color = "red",size = 2)
+ggtitle("Plot of the percentage of prosocial action for each actor")
+
+
+```
+
+```{r}
+#actor
+x = xtabs( ~ prosoc_left + condition + pulled_left, data = dataset)
+x = data.frame(x)
+
+model0 = glm(Freq~prosoc_left + condition + pulled_left, family = poisson,data = x )
+deviance(model0)
+df.residual(model0)
+pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+
+
+```
+
+ctrl + alt + I
+```{r}
+
+```
+
+```{r}
+
+```
+
