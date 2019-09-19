@@ -199,11 +199,31 @@ anova(model3,model4,test = "Chisq")
 
 
 library(ggplot2)
-prosocial = xtabs( ~ actor,prosocial_action,condition, data = dataset)
-prosocial_percentage = transform(prosocial, Freq=Freq/72)
+prosocial = xtabs( ~ actor,prosocial_action, data = dataset[dataset$condition==1,])
+(prosocial_percentage = transform(prosocial, Freq=Freq/36))
+
 
 # generate the bar plot
-ggplot(data=prosocial_percentage, aes(x=actor, y=Freq))+
-  geom_bar(stat="identity", color="blue", fill="blue",width = 0.5)+
+ggplot(data=prosocial_percentage, aes(x=actor, y=Freq,fill = condition))+
+  geom_bar(aes(fill = condition),stat="identity", color="blue", fill="blue",width = 0.5)+
   geom_hline(yintercept=0.5, linetype=1, color = "red",size = 2)+
   ggtitle("Plot of the percentage of prosocial action for each actor")
+
+
+
+library(ggplot2)
+ggplot(data=prosocial_percentage,aes(x=actor,y=Freq,fill=condition))+
+  geom_bar(stat="identity",position="dodge")+
+  ggtitle("Plot of the percentage of prosocial action for each actor")+
+  geom_hline(yintercept=0.5, linetype=2, color = "red",size = 1)
+
+
+prosocial = xtabs(prosocial_action ~ condition, data = dataset)
+(prosocial_percentage = transform(prosocial, Freq=Freq/252))
+
+# generate the bar plot
+library(ggplot2)
+ggplot(data=prosocial_percentage,aes(x=condition,y=Freq))+
+  geom_bar(stat="identity",position="dodge")+
+  ggtitle("Plot of the percentage of prosocial action for chimpanzees")
+  

@@ -38,7 +38,11 @@ dataset = read.delim("assign2.txt", header = TRUE, sep = " ")
 
 
 ```{r}
+with(dataset, interaction.plot(prosoc_left,actor,pulled_left))
+```
+```{r}
 
+with(dataset, interaction.plot(prosoc_left,actor,pulled_left))
 ```
 
 
@@ -116,22 +120,31 @@ This might be an error in data collection process and might be nomal behaviour a
 
 \hfill\break
 
-##3.Test dependency of two factors
-H0 = prosocial_action & condition are independent
-H2 = prosocial_action & condition are dependent
+##3.Test dependency of prosocial_action, condition and and actor
+Using three way contengency table to test the mutually independency of the 3 factors. Poisson regression is used because poisson regression with log link will gives chi-sqare distribution.
+H0 = prosocial_action & condition & actor are independent
+H2 = prosocial_action & condition & actor are not independent
 ```{r}
-x = data.frame(xtabs( ~ prosocial_action + condition, data = dataset))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
+x = xtabs( ~ condition + prosocial_action + actor, data = dataset)
+(x = data.frame(x))
 ```
-The Chi-square statistics is 0.5895537, it is larger than 0.05, thus it is insignificant and prosocial_action & condition are independent. However, there might be confounding factors that are ignored and we need to test them.
+The cell counts need to be at least 5 for the deviance to has chi-square distribution as describe in the lectue. From the data count above, it can be seen that the minimum count is 13.
+
+```{r}
+#fit poisson model
+model0 = glm(Freq ~ condition + prosocial_action + actor, family = poisson, data = x)
+#deviance of the poission regression model
+deviance(model0)
+#degrees of freedom
+df.residual(model0)
+# calculate the p-value
+pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
+
+```
+The p-value is 0.9598556, it is much larger than 0.05, thus we cannot reject H0 and prosocial_action & condition & action are independent. Since we are interested in whether prosocial_action is related the condition (whether there is another chimpanzee in another side), from the result we can say that prosocial_action is independent of condition. And chimpanzee don't behave similarly as human.
 
 \newpage
-#4.Testing confounding factors
+#4.
 actor, prosoc_left and pulled_left might be confounding factors
 
 ##4.1 Testing whether actor is confounding factor
@@ -337,7 +350,4 @@ ctrl + alt + I
 
 ```
 
-```{r}
-
-```
 
