@@ -139,8 +139,8 @@ This might be an error in data collection process and might be nomal behaviour o
 
 \hfill\break
 
-##3.Contengency Table
-Use contengency table to test the dependency of prosocial_action, condition and and actor.
+##4.Contengency Table
+Use contengency table to test the dependency of prosocial_action, condition.
 Using three way contengency table to test the mutually independency of the 3 factors. Poisson regression is used because poisson regression with log link will gives chi-sqare distribution.
 
 H0 = prosocial_action & condition & actor are independent
@@ -166,11 +166,12 @@ pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
 The p-value is 0.9598556, it is much larger than 0.05, thus we cannot reject H0 and prosocial_action & condition & action are independent. Since we are interested in whether prosocial_action is related the condition (whether there is another chimpanzee in another side), from the result we can say that prosocial_action is independent of condition. And chimpanzee don't behave similarly as human.
 
 \newpage
-#4. Binomial Regression
-#4.1 Fitting data with binomial regression
+#5. Binomial Regression
+#5.1 Fitting data with binomial regression
 If we let the count be response variable, and all four factors (condition, prosoc_left, pulled_left, actor) as explanation variable. The count has binomial distribution with n equals to 18 and p is the probability of choosing the prosocial_action.
-Since the n is only 18 and p is large, we cannot use poisson distribution to approximate the binomial model.
+Since the n is only 18 and p is large, we cannot use poisson distribution to approximate the binomial distribution.
 
+##5.1.1 Fit binomial model
 ```{r}
 
 x = xtabs( ~ condition + prosoc_left + pulled_left+ actor, data = dataset)
@@ -184,7 +185,10 @@ dim(x)
 
 #fit binomial regression model
 fullmodel = glm(cbind(total-Freq,Freq) ~ (condition + prosoc_left +actor)^2, family = binomial, data = x)
+```
 
+##5.1.2 Model selsction
+```{r}
 #use AIC to select model
 finalmodel = step(fullmodel)
 ```
@@ -197,24 +201,25 @@ pchisq(deviance(finalmodel), df = df.residual(finalmodel), lower.tail = FALSE)
 anova(finalmodel,fullmodel,test = "Chisq")
 ```
 
-The model comparision test between fullmodel and final model gives p-value = 0.9968, thus the final model is adequate.
-The fianl model after model selection is y ~ prosoc_left + actor + prosoc_left:actor. The number of times choosing prosocial action does dependent on condition because it is not in the final model.
+The model comparision test between fullmodel and final model gives p-value = 0.8402, thus the final model is adequate.
 
-##Check overdispersion
+The fianl model after model selection is y ~ prosoc_left + actor + prosoc_left:actor. Therefore the number of times choosing prosocial action does dependent on condition because it is not in the final model.
+
+##5.1.3 Check overdispersion
 ```{r}
-phihat = sum(residuals(finalmodel,type = "pearson")^2)/finalmodel$df.residual
+(phihat = sum(residuals(finalmodel,type = "pearson")^2)/finalmodel$df.residual)
 ```
-The phihat is 0.3075466 < 1, there is some underdispersion and there is smaller variability than expected. In this case, the test has decreased power and the p-value tend to be less significant. However, underdispersion will not cause problem like overdispersion and we don't need to use the quansibinomial to redo the model fitting.
+The phihat is 0.9971355. It is close to 1 and there is no overdispersion or underdispersion exist.
 
-#Diagonistic plot
+##5.1.4 Diagonistic plot
 ```{r}
 library(faraway) # for halfnorm function
-(D_res <- residuals(finalmodel))
+D_res <- residuals(finalmodel)
 P_res <- residuals(finalmodel, type="pearson")
 lever <- influence(finalmodel)$hat
 J_res <- rstudent(finalmodel)
 Cooks <- cooks.distance(finalmodel)
-(eta_hat <- predict(finalmodel, type="link"))
+eta_hat <- predict(finalmodel, type="link")
 par(mfrow=c(2,2))
 par(mar=c(4,4,1,2))
 plot(eta_hat, D_res, ylab="dev res")
@@ -223,19 +228,25 @@ halfnorm(D_res, ylab="dev res")
 halfnorm(J_res, ylab="jackknife res")
 halfnorm(Cooks, ylab="Cooks dist")
 ```
-The first plot has some data points have extremely small value on the left. From the eta_hat data, it can be found that it is due to the second actor always choose the left lever.
 
-##4.2 After remove the outlier, fitting data with binomial regression
+The first plot has some data points have extremely small and large eta_hat values. From the eta_hat data, it can be found that it is due to the second actor always choose the left lever. In section 3.3, it is mentioned that actor 2 might be an outlier, and we can remove it and see whether it influence our model.
+
+Beside this, all other points have reasonable cooks distance and residual.
+
+\newpage
+
+##5.2 After remove the outlier, fitting data with binomial regression
 
 ```{r}
-#remove actor
+#remove actor2
 x = xtabs( ~ condition + prosoc_left + pulled_left+ actor, data = dataset[dataset$actor !=2,])
 x = data.frame(x)
 #set last column to n = 18
-x["total"] = 18
-(x = x[x$prosoc_left == x$pulled_left,])
 
-#the data have 28 rows
+x["total"] = 18
+x = x[x$prosoc_left == x$pulled_left,]
+
+#the data have 24 rows
 dim(x)
 
 #fit binomial regression model
@@ -243,14 +254,18 @@ fullmodel = glm(cbind(total-Freq,Freq) ~ (condition + prosoc_left +actor)^2, fam
 
 #use AIC to select model
 finalmodel = step(fullmodel)
+```
+The model after remove outlier does not change. It is still y ~ prosoc_left + actor + prosoc_left:actor.
+```{r}
+(phihat = sum(residuals(finalmodel,type = "pearson")^2)/finalmodel$df.residual)
 
 library(faraway) # for halfnorm function
-(D_res <- residuals(finalmodel))
+D_res <- residuals(finalmodel)
 P_res <- residuals(finalmodel, type="pearson")
 lever <- influence(finalmodel)$hat
 J_res <- rstudent(finalmodel)
 Cooks <- cooks.distance(finalmodel)
-(eta_hat <- predict(finalmodel, type="link"))
+eta_hat <- predict(finalmodel, type="link")
 par(mfrow=c(2,2))
 par(mar=c(4,4,1,2))
 plot(eta_hat, D_res, ylab="dev res")
@@ -259,10 +274,15 @@ halfnorm(D_res, ylab="dev res")
 halfnorm(J_res, ylab="jackknife res")
 halfnorm(Cooks, ylab="Cooks dist")
 
-summary(finalmodel)
+
 deviance(finalmodel)
 df.residual(finalmodel)
 pchisq(deviance(finalmodel), df = df.residual(finalmodel), lower.tail = FALSE)
 anova(finalmodel,fullmodel,test = "Chisq")
 ```
-##5.Conclusion
+The removal of outlier dose not change out model, the model is still y ~ prosoc_left + actor + prosoc_left:actor, although our p-value decrease from 0.8402 to 0.7584. Since the model does not change, we can sill conclude that the number of times choosing prosocial action does dependent on condition.
+
+##6.Conclusion
+In this report, section 2 add an new attribute prosocial_action, section 3 plot the relationsip and interactions between factors, section 4 show the prosocial action and condition are independent using contengencytable and section 5 show the number of times choosing prosocial action only dependent on actor and prosoc_left. Thus focal chimpanzee dose not behave like human that choose the prosocial option more often when another animal is present.
+
+As described in section 3.3, actor 2 might be an outlier because it always choose the left lever and is not influence by any other factor. This require some domain knowledge to decided whether it should be removed. However, whether it is removed or not dose not change the result.
