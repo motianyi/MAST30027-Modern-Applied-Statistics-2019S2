@@ -11,8 +11,11 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 Name: Tianyi Mo
+
 Student ID: 875556
+
 Tutorial time: Tue 2.15pm
+
 Tutor: Qiuyi Li
 
 
@@ -21,86 +24,102 @@ Tutor: Qiuyi Li
 This report is about evaluating chimpanzees prosocial tendency by analysing and fitting model to the data.
 The experiment has has two options, one is prosocial option, when human students participate the experiment, they nearly always choose the prosocial option when another student sits on the opposite side of the table. The question is whether a focal chimpanzee behaves similarly, choosing the prosocial option more often when another animal is present.
 
+This report will analysis the dataset, visualize it, fit models to it and finally gives conclusion.
+
 
 ##1.2 Data
-There are four attributtes in the raw data. By looking through the dataset, it is found that every chimpanzee have the same number of instance if data (72 for each chimpanzee), therefore it is not tend to bias towards particular a chimpanzee. It should also be noted the the data is also balanced in the two conditions and two prosoc left, each chimpanzee has 16 experiment on each combination of condition and prosoc left.
+There are four attributtes in the raw data. By looking through the dataset, it is found that there are 7 chimpanzees and every chimpanzee has the same number of instance if data (72 for each chimpanzee), therefore it is not tend to bias towards particular a chimpanzee. It should also be noted the the data is also balanced in condition and prosoc_left attribute, which means that each chimpanzee has 16 experiment on each combination of condition and prosoc left.
 
 These are the 4 attributes in the raw dataset.
 actor (1 to 7)
 condition (0 or 1):
 prosoc left (0 or 1)
 pulled left (0 or 1)
-Load the dataset
+
 ```{r}
+# Load the dataset
 dataset = read.delim("assign2.txt", header = TRUE, sep = " ")
 ```
 
 
 
-```{r}
-with(dataset, interaction.plot(prosoc_left,actor,pulled_left))
-```
-```{r}
-
-with(dataset, interaction.plot(prosoc_left,actor,pulled_left))
-```
-
-
-
-
-
 #2. Preprocessing
-##2.1Create New Attribute
+##2.1 Create an New Attribute
 Since the question is whether a focal chimpanzee choosing the prosocial option more often when another animal is present. Therefore, an new attribute "prosocial_action" is created, it means whether prosoc_left and pulled_left are same. If these two atributes are same, chimpanzee perform prosocially and prosocial_action has value TRUE and otherwise it has value FALSE.
 ```{r}
 dataset['prosocial_action'] = (dataset$prosoc_left == dataset$pulled_left)
-#first10 rows in the dataset after adding new attribute prosocial_action
+#print out first10 rows in the dataset after adding new attribute prosocial_action
 dataset[1:10,]
 ```
 
 
 
 
-##3.Visualization
+#3.Visualization
 
-##3.1Plot of the percentage of prosocial action for all chimpanzees
-```{r }
+##3.1Percentage of prosocial action and other factors
+These plots shows how does the percentage of pro_social action depend on condition, actor and prosoc_left.
+```{r}
+# select the prosocial_action = TRUE data only.
+x = xtabs( ~ condition + prosoc_left+ actor, data = dataset[dataset$prosocial_action ==TRUE,])
+x=data.frame(x)
+
+# divid the Freq(count) by total(=18) and plot
+x["Pecentage_of_prosocial_action"] = x$Freq/18
+```
+
+
+#3.1.1 Percentage of prosocial action and Condition
+```{r fig5, fig.height = 3, fig.width = 2}
+#Mean of prosocial action and condition
 prosocial = xtabs(prosocial_action ~ condition, data = dataset)
 (prosocial_percentage = transform(prosocial, Freq=Freq/252))
-```
-The average percentage of choose prosocial increase from 0.5555556 to 0.5793651 in condition 1.
 
-```{r fig0, fig.height = 2, fig.width = 2}
-# generate the bar plot
-library(ggplot2)
-ggplot(data=prosocial_percentage,aes(x=condition,y=Freq))+
-  coord_cartesian(ylim=c(0, 1))+
-  geom_bar(stat="identity",position="dodge")
+#Boxplot of prosocial action and condition
+plot(Pecentage_of_prosocial_action~condition,x)
 ```
 
-On average, chimapnzees choose the prosocial option more frequently in condition 1 (when there is another chimpanzee in opposite). But the increase is very small and plot each chimpanzee may helps to see the trend more clearly.
+The first plot shows the relationship between condition and prosocial_action. The median decrease, and the variance increase. The mean percentage of choose prosocial increase from 0.5555556 to 0.5793651 in condition 1.
+On average, chimapnzees choose the prosocial option sightly more frequently in condition 1 (when there is
+another chimpanzee in opposite). Since the mean incrases and the median decrease, the relationship between them is not clear.
 
+#3.1.2 Percentage of prosocial action and Actor
+```{r}
+# It can be seen form the data that the mean prosocial_action for each actor are diffenent. 
+prosocial = xtabs(prosocial_action ~ actor, data = dataset)
+(prosocial_percentage = transform(prosocial, Freq=Freq/72))
 
-##3.2Plot of the percentage of prosocial action for each chimpanzee
-```{r fig1, fig.height = 3, fig.width = 6}
-
-prosocial = xtabs(prosocial_action ~ actor + condition, data = dataset)
-prosocial_percentage = transform(prosocial, Freq=Freq/36)
-
-# generate the bar plot
-library(ggplot2)
-ggplot(data=prosocial_percentage,aes(x=actor,y=Freq,fill=condition))+
-  coord_cartesian(ylim=c(0, 1))+
-  geom_bar(stat="identity",position="dodge")+
-  ggtitle("Plot of the percentage of prosocial action for each actor")+
-  geom_hline(yintercept=0.5, linetype=2, color = "red",size = 1)
-
+#Boxplot of prosocial action and condition
+plot(Pecentage_of_prosocial_action~actor,x)
 ```
+The second plot shows that each actor has different response in the test. The prosocial_action is depend on actor. For example, the second actor has the largest variance and actor 1 and 5 have relatively high median and low variance. The trend is meaningless in this plot because actor is not ordinal class.
 
-The plot show the percentage of prosocial action for each chimpanzee on two conditions. It can be seen that most chimpanzee tend to choos the prosocial optional in both condition. 3 of 7 chimpanzees dose not change the frequency of choosing. Three actors choose prosocial option more frequently while one actor perform differently. However, we cannot make conclusion based on the plot and models need to be fit. 
 
-##3.3 Outlier
-From the plot in 3.2, the second chimpanzee (actor 2) show strange result. In both conditions, it chooses proaction option at exactly at 0.5. By looking back through the dataset. It can be found that the it always choose the left one regardless of other factors. There is no similar behaviour like this among other chimpanzees and it might be an outlier.
+
+#3.1.3 Percentage of prosocial action and Prosoc_left
+```{r}
+prosocial = xtabs(prosocial_action ~ prosoc_left, data = dataset)
+(prosocial_percentage = transform(prosocial, Freq=Freq/252))
+
+#Boxplot of prosocial action and prosoc_left
+plot(Pecentage_of_prosocial_action~prosoc_left,x)
+```
+The third plot shows the relationship between prosoc_left and prosocial_action. It can be seen the left and right has different result on prosocial_action. When prosocial option is at right, chimpanzees has 0.4880952 to choose it, but when it is at left, chimpanzees has 0.6468254 probability to choose it.
+
+\newpage
+#3.2 Interactions Between Two Factors
+```{r fig2, fig.height = 3.7, fig.width = 6}
+with(dataset, interaction.plot(condition,actor,prosocial_action))
+with(dataset, interaction.plot(actor,condition,prosocial_action))
+```
+```{r fig3, fig.height = 3.7, fig.width = 6}
+with(dataset, interaction.plot(actor,prosocial_action,condition))
+```
+#It seems that there are some interaction between actor and prosocial_action and all actors have different mean of pro_action.
+
+
+##3.3 Outlier Detection
+From the previous plots, the second chimpanzee (actor 2) show strange result. In both conditions, it chooses proaction option at exactly at 0.5. By looking back to the raw dataset. It can be found that the it always choose the left one regardless of any other factors. There is no similar behaviour like this among other chimpanzees and it might be an outlier.
 
 ```{r}
 # Second chimpanzee always pulled the left lever
@@ -113,26 +132,29 @@ xtabs(~prosoc_left+pulled_left, data =  dataset[dataset$actor == 2,])
 xtabs(~prosoc_left+pulled_left, data =  dataset[dataset$actor == 1,])
 ```
 
-This might be an error in data collection process and might be nomal behaviour among chimpanzee species. Based on the data, I cannot decided which one it should be. This problem should be checked with the zoologist and experts with domain knowledges to decided whether to remove data from chimpanzee 2. In this report, assume it is not an error and thus the include data from chimpanzee 2.
+This might be an error in data collection process and might be nomal behaviour of chimpanzee species. Based on the data, I cannot decided which one it should be. This problem should be checked with the zoologist and experts with domain knowledges to decided whether to remove data from chimpanzee 2.
 
 
 \newpage
 
 \hfill\break
 
-##3.Test dependency of prosocial_action, condition and and actor
+##3.Contengency Table
+Use contengency table to test the dependency of prosocial_action, condition and and actor.
 Using three way contengency table to test the mutually independency of the 3 factors. Poisson regression is used because poisson regression with log link will gives chi-sqare distribution.
+
 H0 = prosocial_action & condition & actor are independent
-H2 = prosocial_action & condition & actor are not independent
+
+H1 = prosocial_action & condition & actor are not independent
 ```{r}
-x = xtabs( ~ condition + prosocial_action + actor, data = dataset)
+x = xtabs( ~ condition + prosocial_action, data = dataset)
 (x = data.frame(x))
 ```
 The cell counts need to be at least 5 for the deviance to has chi-square distribution as describe in the lectue. From the data count above, it can be seen that the minimum count is 13.
 
 ```{r}
 #fit poisson model
-model0 = glm(Freq ~ condition + prosocial_action + actor, family = poisson, data = x)
+model0 = glm(Freq ~ condition + prosocial_action, family = poisson, data = x)
 #deviance of the poission regression model
 deviance(model0)
 #degrees of freedom
@@ -144,210 +166,103 @@ pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
 The p-value is 0.9598556, it is much larger than 0.05, thus we cannot reject H0 and prosocial_action & condition & action are independent. Since we are interested in whether prosocial_action is related the condition (whether there is another chimpanzee in another side), from the result we can say that prosocial_action is independent of condition. And chimpanzee don't behave similarly as human.
 
 \newpage
-#4.
-actor, prosoc_left and pulled_left might be confounding factors
+#4. Binomial Regression
+#4.1 Fitting data with binomial regression
+If we let the count be response variable, and all four factors (condition, prosoc_left, pulled_left, actor) as explanation variable. The count has binomial distribution with n equals to 18 and p is the probability of choosing the prosocial_action.
+Since the n is only 18 and p is large, we cannot use poisson distribution to approximate the binomial model.
 
-##4.1 Testing whether actor is confounding factor
-H0 : prosocial_action + condition + actor are independet
-H1 : prosocial_action + condition + actor are dependet
 ```{r}
-#test all 3 factor are independent
-x = xtabs( ~ prosocial_action + condition + actor, data = dataset)
-model1 = glm(Freq~ prosocial_action + condition + actor, family = poisson,data = x )
-deviance(model1)
-pchisq(deviance(model1), df = df.residual(model1), lower.tail = FALSE)
+
+x = xtabs( ~ condition + prosoc_left + pulled_left+ actor, data = dataset)
+x = data.frame(x)
+#set last column to n = 18
+x["total"] = 18
+(x = x[x$prosoc_left == x$pulled_left,])
+
+#the data have 28 rows
+dim(x)
+
+#fit binomial regression model
+fullmodel = glm(cbind(total-Freq,Freq) ~ (condition + prosoc_left +actor)^2, family = binomial, data = x)
+
+#use AIC to select model
+finalmodel = step(fullmodel)
 ```
-p-value = 0.9598556, thus prosocial_action, condition and actor are independent, thus actor is not and confounding a factor.
-
-
-
-
-##4.2 Testing whether pulled_left is confounding factor
-H0 : prosocial_action + condition + pulled_left are independet
-H1 : prosocial_action + condition + pulled_left are dependet
+The fianl model after model selection is y ~ prosoc_left + actor + prosoc_left:actor
 ```{r}
-#test all 3 factor are independent
-x = xtabs( ~ prosocial_action + condition + pulled_left, data = dataset)
-model1 = glm(Freq~ prosocial_action + condition + pulled_left, family = poisson,data = x )
-deviance(model1)
-pchisq(deviance(model1), df = df.residual(model1), lower.tail = FALSE)
+summary(finalmodel)
+deviance(finalmodel)
+df.residual(finalmodel)
+pchisq(deviance(finalmodel), df = df.residual(finalmodel), lower.tail = FALSE)
+anova(finalmodel,fullmodel,test = "Chisq")
 ```
-p-value = 0.7933302, thus prosocial_action, condition and pulled_left are independent, thus pulled_left is not and confounding a factor.
 
+The model comparision test between fullmodel and final model gives p-value = 0.9968, thus the final model is adequate.
+The fianl model after model selection is y ~ prosoc_left + actor + prosoc_left:actor. The number of times choosing prosocial action does dependent on condition because it is not in the final model.
 
-
-##4.3 Testing whether prosoc_left is confounding factor
-H0 : prosocial_action + condition + prosoc_left are independet
-H1 : prosocial_action + condition + prosoc_left are dependet
+##Check overdispersion
 ```{r}
-#test all 3 factor are independent
-x = xtabs( ~ prosocial_action + condition + prosoc_left, data = dataset)
-model1 = glm(Freq~ prosocial_action + condition + prosoc_left, family = poisson,data = x)
-deviance(model1)
-pchisq(deviance(model1), df = df.residual(model1), lower.tail = FALSE)
-
+phihat = sum(residuals(finalmodel,type = "pearson")^2)/finalmodel$df.residual
 ```
-p-value = 0.006020994,reject H0, thus 3 factors prosocial_action, condition and prosoc_left are dependent.
+The phihat is 0.3075466 < 1, there is some underdispersion and there is smaller variability than expected. In this case, the test has decreased power and the p-value tend to be less significant. However, underdispersion will not cause problem like overdispersion and we don't need to use the quansibinomial to redo the model fitting.
 
-H0 : prosoc_left is independent of prosocial_action and condition
-H1 : prosoc_left is dependent of prosocial_action and condition
+#Diagonistic plot
 ```{r}
-#test if prosoc_left is independent of prosocial_action and condition 
-model2 = glm(Freq~ prosocial_action * condition + prosoc_left, family = poisson,data = x )
-deviance(model2)
-pchisq(deviance(model2), df = df.residual(model2), lower.tail = FALSE)
+library(faraway) # for halfnorm function
+(D_res <- residuals(finalmodel))
+P_res <- residuals(finalmodel, type="pearson")
+lever <- influence(finalmodel)$hat
+J_res <- rstudent(finalmodel)
+Cooks <- cooks.distance(finalmodel)
+(eta_hat <- predict(finalmodel, type="link"))
+par(mfrow=c(2,2))
+par(mar=c(4,4,1,2))
+plot(eta_hat, D_res, ylab="dev res")
+lines(predict(loess(D_res ~ eta_hat)), col="red")
+halfnorm(D_res, ylab="dev res")
+halfnorm(J_res, ylab="jackknife res")
+halfnorm(Cooks, ylab="Cooks dist")
 ```
-p-value = 0.002711932, reject H0,thus prosoc_left is dependent of prosocial_action and condition
+The first plot has some data points have extremely small value on the left. From the eta_hat data, it can be found that it is due to the second actor always choose the left lever.
 
-H0:prosocial_action and condition are conditionally independent of prosoc_left
-H1:prosocial_action and condition are conditionally dependent of prosoc_left
-```{r}
-#test if prosocial_action and condition are conditionally independent of prosoc_left
-model3 = glm(Freq~ prosocial_action * prosoc_left + condition * prosoc_left, family = poisson,data = x )
-deviance(model3)
-pchisq(deviance(model3), df = df.residual(model3), lower.tail = FALSE)
-```
-p-value = 0.4858032, p-value > 0.05,fail to reject H0,thus prosocial_action and condition are independent conditional on prosoc_left
+##4.2 After remove the outlier, fitting data with binomial regression
 
 ```{r}
+#remove actor
+x = xtabs( ~ condition + prosoc_left + pulled_left+ actor, data = dataset[dataset$actor !=2,])
+x = data.frame(x)
+#set last column to n = 18
+x["total"] = 18
+(x = x[x$prosoc_left == x$pulled_left,])
 
+#the data have 28 rows
+dim(x)
+
+#fit binomial regression model
+fullmodel = glm(cbind(total-Freq,Freq) ~ (condition + prosoc_left +actor)^2, family = binomial, data = x)
+
+#use AIC to select model
+finalmodel = step(fullmodel)
+
+library(faraway) # for halfnorm function
+(D_res <- residuals(finalmodel))
+P_res <- residuals(finalmodel, type="pearson")
+lever <- influence(finalmodel)$hat
+J_res <- rstudent(finalmodel)
+Cooks <- cooks.distance(finalmodel)
+(eta_hat <- predict(finalmodel, type="link"))
+par(mfrow=c(2,2))
+par(mar=c(4,4,1,2))
+plot(eta_hat, D_res, ylab="dev res")
+lines(predict(loess(D_res ~ eta_hat)), col="red")
+halfnorm(D_res, ylab="dev res")
+halfnorm(J_res, ylab="jackknife res")
+halfnorm(Cooks, ylab="Cooks dist")
+
+summary(finalmodel)
+deviance(finalmodel)
+df.residual(finalmodel)
+pchisq(deviance(finalmodel), df = df.residual(finalmodel), lower.tail = FALSE)
+anova(finalmodel,fullmodel,test = "Chisq")
 ```
 ##5.Conclusion
-
-
-
-Question of interest is the relationship between condition and pulled_left and prosoc_left, we can combine the data over all 7 chimpanzees. 
-```{r}
-cta = xtabs( ~ prosoc_left + condition + pulled_left, data = dataset)
-##pearson's chisquared test
-summary(cta)
-```
-The chisquare statistic is 10.877, with 4 degrees of freedom and p-value 0.02798. It is less than 0.05 thus is significant. Thus the three factors dependent.
-
-
-Then test it for each chimpanzee.
-
-
-##Chimpanzee 1
-```{r}
-# generate data for champanzee 1
-data1 = dataset[dataset$actor == 1,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data1))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-```
-
-
-
-##Chimpanzee 2
-Chimpanzee 2 performed a little wired compare to other chimpanzees, it always pull on the left lever and might whatever other factors are. It might be an outlier
-```{r}
-# generate data for champanzee 1
-data2 = dataset[dataset$actor == 2,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data2))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-```
-
-
-
-##Chimpanzee 3
-```{r}
-# generate data for champanzee 3
-data3 = dataset[dataset$actor == 3,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data3))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-```
-
-
-
-##Chimpanzee 4
-```{r}
-# generate data for champanzee 4
-data4 = dataset[dataset$actor == 4,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data4))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-```
-
-
-
-##Chimpanzee 5
-```{r}
-# generate data for champanzee 1
-data5 = dataset[dataset$actor == 5,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data5))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-```
-
-
-
-##Chimpanzee 6
-```{r}
-data6 = dataset[dataset$actor == 6,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data6))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-
-```
-
-
-
-##Chimpanzee 7
-```{r}
-data7 = dataset[dataset$actor == 7,]
-x = data.frame(xtabs( ~ prosocial_action + condition, data = data6))
-
-#using poisson regression to build model
-model = glm(Freq~prosocial_action + condition, family = poisson,data = x )
-deviance(model)
-df.residual(model)
-pchisq(deviance(model), df = df.residual(model), lower.tail = FALSE)
-
-```
-
-```
-
-```{r}
-
-```
-
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-```{r}
-
-
-```
-
-ctrl + alt + I
-```{r}
-
-```
-
-
