@@ -21,14 +21,14 @@ Tutor: Qiuyi Li
 
 #1.Introduction
 ##1.1 Background
-This report is about evaluating chimpanzees prosocial tendency by analysing and fitting model to the data.
-The experiment has has two options, one is prosocial option, when human students participate the experiment, they nearly always choose the prosocial option when another student sits on the opposite side of the table. The question is whether a focal chimpanzee behaves similarly, choosing the prosocial option more often when another animal is present.
+This report is about evaluating chimpanzee's prosocial tendency by analyzing and fitting models to the data.
+The experiment has two options, one is the prosocial option, when human students participate in the experiment, they nearly always choose the prosocial option when another student sits on the opposite side of the table. The question is whether a focal chimpanzee behaves similarly, choosing the prosocial option more often when another animal is present.
 
-This report will analysis the dataset, visualize it, fit models to it and finally gives conclusion.
+This report will analyse the dataset, visualize it, fit models to it and finally gives a conclusion.
 
 
 ##1.2 Data
-There are four attributtes in the raw data. By looking through the dataset, it is found that there are 7 chimpanzees and every chimpanzee has the same number of instance if data (72 for each chimpanzee), therefore it is not tend to bias towards particular a chimpanzee. It should also be noted the the data is also balanced in condition and prosoc_left attribute, which means that each chimpanzee has 16 experiment on each combination of condition and prosoc left.
+There are four attributes in the raw data. By looking through the dataset, it is found that there are 7 chimpanzees and every chimpanzee has the same number of instances of data (72 for each chimpanzee), therefore it does not tend to bias towards particular a chimpanzee. It should also be noted that the data is also balanced in condition and prosoc_left attribute, which means that each chimpanzee has 16 experiments on each combination of conditions and prosoc_left.
 
 These are the 4 attributes in the raw dataset.
 actor (1 to 7)
@@ -44,8 +44,8 @@ dataset = read.delim("assign2.txt", header = TRUE, sep = " ")
 
 
 #2. Preprocessing
-##2.1 Create an New Attribute
-Since the question is whether a focal chimpanzee choosing the prosocial option more often when another animal is present. Therefore, an new attribute "prosocial_action" is created, it means whether prosoc_left and pulled_left are same. If these two atributes are same, chimpanzee perform prosocially and prosocial_action has value TRUE and otherwise it has value FALSE.
+##2.1 Create a New Attribute
+Since the question is whether a focal chimpanzee choosing the prosocial option more often when another animal is present. Therefore, a new attribute "prosocial_action" is created, it means whether prosoc_left and pulled_left are same. If these two attributes are same, chimpanzee performs prosocially and prosocial_action has the value TRUE and otherwise, it has the value FALSE.
 ```{r}
 dataset['prosocial_action'] = (dataset$prosoc_left == dataset$pulled_left)
 #print out first10 rows in the dataset after adding new attribute prosocial_action
@@ -69,8 +69,8 @@ x["Pecentage_of_prosocial_action"] = x$Freq/18
 ```
 
 
-#3.1.1 Percentage of prosocial action and Condition
-```{r fig5, fig.height = 3, fig.width = 2}
+##3.1.1 Percentage of prosocial action and Condition
+```{r}
 #Mean of prosocial action and condition
 prosocial = xtabs(prosocial_action ~ condition, data = dataset)
 (prosocial_percentage = transform(prosocial, Freq=Freq/252))
@@ -79,11 +79,11 @@ prosocial = xtabs(prosocial_action ~ condition, data = dataset)
 plot(Pecentage_of_prosocial_action~condition,x)
 ```
 
-The first plot shows the relationship between condition and prosocial_action. The median decrease, and the variance increase. The mean percentage of choose prosocial increase from 0.5555556 to 0.5793651 in condition 1.
-On average, chimapnzees choose the prosocial option sightly more frequently in condition 1 (when there is
-another chimpanzee in opposite). Since the mean incrases and the median decrease, the relationship between them is not clear.
+The first plot shows the relationship between condition and prosocial_action. The median decreases, and the variance increases in condition 1. In addition, the mean percentage of choose prosocial increase from 0.5555556 to 0.5793651.
+On average, chimpanzees choose the prosocial option sightly more frequently in condition 1 (when there is
+another chimpanzee in opposite). Since the mean increases and the median decrease, the relationship between them is not clear.
 
-#3.1.2 Percentage of prosocial action and Actor
+##3.1.2 Percentage of prosocial action and Actor
 ```{r}
 # It can be seen form the data that the mean prosocial_action for each actor are diffenent. 
 prosocial = xtabs(prosocial_action ~ actor, data = dataset)
@@ -92,11 +92,11 @@ prosocial = xtabs(prosocial_action ~ actor, data = dataset)
 #Boxplot of prosocial action and condition
 plot(Pecentage_of_prosocial_action~actor,x)
 ```
-The second plot shows that each actor has different response in the test. The prosocial_action is depend on actor. For example, the second actor has the largest variance and actor 1 and 5 have relatively high median and low variance. The trend is meaningless in this plot because actor is not ordinal class.
+The second plot shows that each actor has different responses in the test. The prosocial_action is depended on actor. For example, the second actor has the largest variance and actor 1 and 5 have relatively higher median and low variance. The trend is meaningless in this plot because actor is not an ordinal class.
 
 
 
-#3.1.3 Percentage of prosocial action and Prosoc_left
+##3.1.3 Percentage of prosocial action and Prosoc_left
 ```{r}
 prosocial = xtabs(prosocial_action ~ prosoc_left, data = dataset)
 (prosocial_percentage = transform(prosocial, Freq=Freq/252))
@@ -104,7 +104,7 @@ prosocial = xtabs(prosocial_action ~ prosoc_left, data = dataset)
 #Boxplot of prosocial action and prosoc_left
 plot(Pecentage_of_prosocial_action~prosoc_left,x)
 ```
-The third plot shows the relationship between prosoc_left and prosocial_action. It can be seen the left and right has different result on prosocial_action. When prosocial option is at right, chimpanzees has 0.4880952 to choose it, but when it is at left, chimpanzees has 0.6468254 probability to choose it.
+The third plot shows the relationship between prosoc_left and prosocial_action. It can be seen the left and right have different result on prosocial_action. When the prosocial option is at right, chimpanzees have 0.4880952 to choose it, but when it is at left, chimpanzees have 0.6468254 probability to choose it.
 
 \newpage
 #3.2 Interactions Between Two Factors
@@ -115,11 +115,11 @@ with(dataset, interaction.plot(actor,condition,prosocial_action))
 ```{r fig3, fig.height = 3.7, fig.width = 6}
 with(dataset, interaction.plot(actor,prosocial_action,condition))
 ```
-#It seems that there are some interaction between actor and prosocial_action and all actors have different mean of pro_action.
+It seems that there are some interaction between actor and prosocial_action, all actors have different mean of pro_action.
 
 
-##3.3 Outlier Detection
-From the previous plots, the second chimpanzee (actor 2) show strange result. In both conditions, it chooses proaction option at exactly at 0.5. By looking back to the raw dataset. It can be found that the it always choose the left one regardless of any other factors. There is no similar behaviour like this among other chimpanzees and it might be an outlier.
+#3.3 Outlier Detection
+From the previous plots, the second chimpanzee (actor 2) shows a strange result. In both conditions, it chooses proaction option at exactly 0.5 probability. By looking back to the raw dataset. It can be found that it always chooses the left one regardless of any other factors. There is no similar behavior like this among other chimpanzees thus it might be an outlier.
 
 ```{r}
 # Second chimpanzee always pulled the left lever
@@ -132,25 +132,24 @@ xtabs(~prosoc_left+pulled_left, data =  dataset[dataset$actor == 2,])
 xtabs(~prosoc_left+pulled_left, data =  dataset[dataset$actor == 1,])
 ```
 
-This might be an error in data collection process and might be nomal behaviour of chimpanzee species. Based on the data, I cannot decided which one it should be. This problem should be checked with the zoologist and experts with domain knowledges to decided whether to remove data from chimpanzee 2.
+This might be an error in the data collection process and might be normal behavior of chimpanzee species. Based on the data, I cannot decide which one it should be. This problem should be checked with the zoologist and experts with domain knowledge to decided whether to remove data from chimpanzee 2.
 
 
 \newpage
 
 \hfill\break
 
-##4.Contengency Table
-Use contengency table to test the dependency of prosocial_action, condition.
-Using three way contengency table to test the mutually independency of the 3 factors. Poisson regression is used because poisson regression with log link will gives chi-sqare distribution.
+#4.Contingency Table
+Use contingency table to test the dependency of prosocial_action, condition. Poisson regression is used because poisson regression with log link will give chi-square distribution.
 
-H0 = prosocial_action & condition & actor are independent
+H0 = prosocial_action & condition are independent
 
-H1 = prosocial_action & condition & actor are not independent
+H1 = prosocial_action & condition are not independent
 ```{r}
 x = xtabs( ~ condition + prosocial_action, data = dataset)
 (x = data.frame(x))
 ```
-The cell counts need to be at least 5 for the deviance to has chi-square distribution as describe in the lectue. From the data count above, it can be seen that the minimum count is 13.
+The cell counts need to be at least 5 for the deviance to has chi-square distribution as describe in the lectue. From the data count above, it can be seen that the minimum count is 106.
 
 ```{r}
 #fit poisson model
@@ -163,12 +162,32 @@ df.residual(model0)
 pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
 
 ```
-The p-value is 0.9598556, it is much larger than 0.05, thus we cannot reject H0 and prosocial_action & condition & action are independent. Since we are interested in whether prosocial_action is related the condition (whether there is another chimpanzee in another side), from the result we can say that prosocial_action is independent of condition. And chimpanzee don't behave similarly as human.
+
+As shown in section 3.3, actor2 might be an outlier, so we can remove it and do the contengency table again to see whether the result is different.
+```{r}
+#remove outlier (Actor 2)
+x = xtabs( ~ condition + prosocial_action, data = dataset[dataset$actor!=2,])
+(x = data.frame(x))
+#fit poisson model
+model0 = glm(Freq ~ condition + prosocial_action, family = poisson, data = x)
+#deviance of the poission regression model
+deviance(model0)
+#degrees of freedom
+df.residual(model0)
+# calculate the p-value
+pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
+
+```
+The p-value is 0.5895537 (or 0.5587622 if remove outlier), both of them are much larger than 0.05, thus we cannot reject H0 and prosocial_action & condition are independent. Since they are already independent, there is no need to check for confounding factors.
+
+Our interest is whether prosocial_action is related to the condition (whether there is another chimpanzee on another side), from the result we can say that prosocial_action is independent of condition. And chimpanzee doesn't behave similarly as humans.
+
+
 
 \newpage
 #5. Binomial Regression
-#5.1 Fitting data with binomial regression
-If we let the count be response variable, and all four factors (condition, prosoc_left, pulled_left, actor) as explanation variable. The count has binomial distribution with n equals to 18 and p is the probability of choosing the prosocial_action.
+##5.1 Fitting data with binomial regression
+If we let the count be response variable, and all four factors (condition, prosoc_left, pulled_left, actor) as explanation variable. The count has a binomial distribution with n equals to 18 and p is the probability of choosing the prosocial_action.
 Since the n is only 18 and p is large, we cannot use poisson distribution to approximate the binomial distribution.
 
 ##5.1.1 Fit binomial model
@@ -201,9 +220,9 @@ pchisq(deviance(finalmodel), df = df.residual(finalmodel), lower.tail = FALSE)
 anova(finalmodel,fullmodel,test = "Chisq")
 ```
 
-The model comparision test between fullmodel and final model gives p-value = 0.8402, thus the final model is adequate.
+The model comparison test between full model and final model gives p-value = 0.8402, thus the final model is adequate.
 
-The fianl model after model selection is y ~ prosoc_left + actor + prosoc_left:actor. Therefore the number of times choosing prosocial action does dependent on condition because it is not in the final model.
+The final model after model selection is y ~ prosoc_left + actor + prosoc_left:actor. Therefore the number of times choosing prosocial action does depend on condition because it is not in the final model.
 
 ##5.1.3 Check overdispersion
 ```{r}
@@ -229,13 +248,13 @@ halfnorm(J_res, ylab="jackknife res")
 halfnorm(Cooks, ylab="Cooks dist")
 ```
 
-The first plot has some data points have extremely small and large eta_hat values. From the eta_hat data, it can be found that it is due to the second actor always choose the left lever. In section 3.3, it is mentioned that actor 2 might be an outlier, and we can remove it and see whether it influence our model.
+The first plot has some data points has extremely small and large eta_hat values. From the eta_hat data, it can be found that it is due to the second actor always choose the left lever. In section 3.3, it is mentioned that actor 2 might be an outlier, and we can remove it and see whether it influence our model.
 
 Beside this, all other points have reasonable cooks distance and residual.
 
 \newpage
 
-##5.2 After remove the outlier, fitting data with binomial regression
+##5.2 After removeing the outlier, fitting data with binomial regression
 
 ```{r}
 #remove actor2
@@ -283,6 +302,6 @@ anova(finalmodel,fullmodel,test = "Chisq")
 The removal of outlier dose not change out model, the model is still y ~ prosoc_left + actor + prosoc_left:actor, although our p-value decrease from 0.8402 to 0.7584. Since the model does not change, we can sill conclude that the number of times choosing prosocial action does dependent on condition.
 
 ##6.Conclusion
-In this report, section 2 add an new attribute prosocial_action, section 3 plot the relationsip and interactions between factors, section 4 show the prosocial action and condition are independent using contengencytable and section 5 show the number of times choosing prosocial action only dependent on actor and prosoc_left. Thus focal chimpanzee dose not behave like human that choose the prosocial option more often when another animal is present.
+In this report, section 2 adds a new attribute "prosocial_action", section 3 plots the relationships and interactions between factors, section 4 shows the prosocial action and condition are independent using contingency table and section 5 shows the number of times choosing prosocial action only dependent on actor and prosoc_left. Thus focal chimpanzee do not behaving like human that choose the prosocial option more often when another animal is present.
 
-As described in section 3.3, actor 2 might be an outlier because it always choose the left lever and is not influence by any other factor. This require some domain knowledge to decided whether it should be removed. However, whether it is removed or not dose not change the result.
+As described in section 3.3, actor 2 might be an outlier because it always chooses the left lever and is not influence by any other factor. This require some domain knowledge to decided whether it should be removed. However, whether it is removed or not does not change the result.
