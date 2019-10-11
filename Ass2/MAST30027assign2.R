@@ -227,3 +227,54 @@ ggplot(data=prosocial_percentage,aes(x=condition,y=Freq))+
   geom_bar(stat="identity",position="dodge")+
   ggtitle("Plot of the percentage of prosocial action for chimpanzees")
   
+
+
+
+
+
+# x = transform(x, Freq=Freq/252)
+
+
+########################################################################################################
+x = xtabs( ~ condition + prosocial_action + actor, data = dataset)
+(x = data.frame(x))
+
+model0 = glm(Freq ~ condition + prosocial_action + actor, family = poisson, data = x)
+deviance(model0)
+df.residual(model0)
+pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
+
+
+model0 = glm(Freq~condition + prosocial_action * actor, family = poisson, data = x)
+deviance(model0)
+df.residual(model0)
+pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
+
+
+
+summary(xtabs( ~ condition + prosocial_action, data = dataset))
+(phihat = sum(residuals(model0,type = "pearson")^2)/model0$df.residual)
+
+
+
+
+#binominal regression
+# dataset['prosocial_action'] = (dataset$prosoc_left == dataset$pulled_left)
+x = xtabs( ~ condition + prosoc_left + pulled_left+ actor, data = dataset)
+(x = data.frame(x))
+x["total"] = 18
+newdata = x[x$prosoc_left == x$pulled_left,]
+
+
+regressionmodel = glm(cbind(Freq,total) ~ (condition + prosoc_left +pulled_left + actor)^2, family = binomial, data = x)
+newmodel = step(regressionmodel)
+deviance(newmodel)
+df.residual(newmodel)
+# pchisq(deviance(model0), df = df.residual(model0), lower.tail = FALSE)
+
+
+with(dataset, interaction.plot(prosoc_left,pulled_left,actor))
+
+
+prosocial = xtabs(prosocial_action ~ condition, data = dataset)
+(prosocial_percentage = transform(prosocial, Freq=Freq/252))
