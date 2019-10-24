@@ -1,113 +1,241 @@
 ---
-title: "MAST30027Assignment4"
+title: "MAST30027 Modern Applied Statistics Assignment4"
 author: "Tianyi Mo"
 date: "October 24,2019"
 output: pdf_document
+fig_width: 6
+fig_height: 3
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+Name: Tianyi Mo
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Student ID: 875556
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Tutorial time: Tue 2.15pm
 
-```{r cars}
-summary(cars)
-```
+Tutor: Qiuyi Li
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-# load data
+##1(b)
 ```{r}
-library(boot)
-data(coal)
-str(coal)
-when <- floor(coal)
-year <- 1851:1962
-freq <- sapply(year, function(x, y) sum(y==x), y=when)
-str(freq)
-n <- length(freq)
-plot(year, freq)
+#load the dataset
+data <- scan("Assign4Data.txt")
+n = 100
 ```
 
-# Implement Gibbs Sampler 
+
 ```{r}
-GibbsS <- function(la1, la2, M, nreps, freq){
+# gibbs sampler
+GibbsS <- function(mu0, tau0, m){
+  
+  # create array
+  mu.seq = rep(-1,m)
+  tau.seq = rep(-1,m)
+  
+  # initial value
+  mu.seq[1] = mu0
+  tau.seq[1] = tau0
 
-  # priors; uniform for M
-  a1 <- .5
-  b1 <- .001
-  a2 <- .5
-  b2 <- .001
-
-  Gsamples <- matrix(nrow=nreps, ncol=3)
-  Gsamples[1,] <- c(la1, la2, M)
-
-  # main loop
-  cfreq <- cumsum(freq)
-  for (i in 2:nreps) {
-    la1 <- rgamma(1, a1 + cfreq[M], b1 + M)
-    la2 <- rgamma(1, a2 + cfreq[n] - cfreq[M], b2 + n - M)
-    M <- sample(1:n, 1, prob=(la1/la2)^cfreq*exp((la2-la1)*(1:n)))
-    Gsamples[i,] <- c(la1, la2, M)
+  # iterations
+  for (i in 2:m) {
+    mu.seq[i] = rnorm(1,mean(data),sd = sqrt(1/(tau.seq[i-1]*n)))
+    tau.seq[i] = rgamma(1,n/2, scale = (2/sum((data-mu.seq[i])^2)))
   }
-
-  return(Gsamples=Gsamples)
+  
+  # result as single list
+  result  = list(mu = mu.seq, tau = tau.seq)
+  return(result)
 }
 ```
 
-# Simulate two Markov Chains (of length 500) using Gibbs Sampler
-```{r}
-# sample size
-nreps <- 500
+```{r gibbs, echo=TRUE,fig.height = 3, fig.width = 6}
+#set seed
+set.seed(30027)
 
-# initial values
-la1 <- 1
-la2 <- 1
-M <- 100
+#number of iterations
+m = 1000
 
-GibbsS1 = GibbsS(la1, la2, M, nreps, freq)
+#generate 2 samples from gibbs sampler with different initial value
+gibbsam1 = GibbsS(7,0.01,m)
+gibbsam2 = GibbsS(3,0.9,m)
 
-# initial values
-la1 <- 3
-la2 <- 3
-M <- 50
+par(mfrow=c(1,1), mar = c(4,4,1,1))
 
-GibbsS2 = GibbsS(la1, la2, M, nreps, freq)
+#trace plot mu
+plot(x=1:m, gibbsam1$mu, type="l", col="red", ylim = c(0, max(gibbsam1$mu,gibbsam2$mu)), 
+     xlab = "iteration", ylab ="mu",main = "Trace plot of mu")
+points(1:m, gibbsam2$mu, type="l", col="blue")
+
+#trace plot tau
+plot(1:m, gibbsam1$tau, type="l", col="red", ylim = c(0, max(gibbsam1$tau,gibbsam2$tau)), 
+     xlab = "iteration", ylab ="tau",main = "Trace plot of tau")
+points(1:m, gibbsam2$tau, type="l", col="blue")
+```
+\newpage
+
+##1(c)
+1)
+```{r 1c, echo=TRUE,fig.height = 3, fig.width = 6}
+#combine 2 simulations
+gibbsam = list(mu =c(tail(gibbsam1$mu,m/2),tail(gibbsam2$mu,m/2))
+               ,tau =c(tail(gibbsam1$tau,m/2),tail(gibbsam2$tau,m/2)))
+
+#marginal posterior distribution pf mu
+plot(density(gibbsam$mu), main="simulated pdf of mu ", xlab="mu", lwd=2)
+
+#marginal posterior distribution pf tau
+plot(density(gibbsam$tau), main="simulated pdf of tau ", xlab="tau", lwd=2)
 ```
 
 
-# trace plot
+2)posterior mean
 ```{r}
-par(mfrow=c(3,1), mar=c(4,4,1,1))
-plot(1:nreps, GibbsS1[,1], type="l", col="red", ylim = c(0, max(GibbsS1[,1],GibbsS2[,1])), xlab = "iteration", ylab ="lambda1")
-points(1:nreps, GibbsS2[,1], type="l", col="blue")
+#posterior mean of mu
+(mu_hat = mean(gibbsam$mu))
 
-plot(1:nreps, GibbsS1[,2], type="l", col="red", ylim = c(0, max(GibbsS1[,2],GibbsS2[,2])), xlab = "iteration", ylab ="lambda2")
-points(1:nreps, GibbsS2[,2], type="l", col="blue")
+#posterior mean of tau
+(tau_hat = mean(gibbsam$tau))
+```
 
-plot(1:nreps, GibbsS1[,3], type="l", col="red", ylim = c(0, max(GibbsS1[,3],GibbsS2[,3])), xlab = "iteration", ylab ="M")
-points(1:nreps, GibbsS2[,3], type="l", col="blue")
+3)
+```{r}
+
+
+credible_interval <- function(simulation){
+  
+  #sort the simulation ascending order
+  ascending = sort(simulation,decreasing = FALSE)
+  
+  #sort the simulation descending order
+  descending = sort(simulation,decreasing = TRUE)
+  
+  x = 1:length(simulation)/length(simulation)
+  
+  #Conservative statistics
+  interval = c(descending[which(x>=0.95)[1]],ascending[which(x>=0.95)[1]])
+  
+  return(interval)
+}
+
+#credible interval of mu
+(credible_interval(gibbsam$mu))
+
+#credible interval of tau
+(credible_interval(gibbsam$tau))
+
+```
+
+2a)
+```{r}
+
+#MH
+# prior distribution
+prior <- function(param){
+  tau = param[2]
+  return(log(1/tau))
+}
+
+# likelihood
+likelihood <- function(param){
+  mu = param[1]
+  tau = param[2]
+  
+  #log likelihood
+  logL = dnorm(data, mean = mu, sd = sqrt(1/tau),log = TRUE)
+  return(sum(logL))
+}
+
+# posterior distribution
+posterior <- function(param){
+  return(likelihood(param) + prior(param))
+}
+
+# proposal function
+proposalfunction <- function(param){
+  mu = param[1]
+  tau = param[2]
+  proposal_tau = rgamma(1,shape = 5*tau,rate = 5)
+  proposal_mu = rnorm(1,mu,sd = sqrt(proposal_tau))
+  return(c(proposal_mu, proposal_tau))
+}
+
+# metropolis hastings
+metropolis_hastings <- function(startvalue, iterations){
+  chain = array(dim = c(iterations+1, 2))
+  chain[1,] = startvalue
+  
+  for(i in 1:iterations){
+    proposal = proposalfunction(chain[i,])
+    probab = exp(posterior(proposal) - posterior(chain[i,]))
+    if(runif(1) < probab){
+      chain[i+1,] = proposal
+    }else{
+      chain[i+1,] = chain[i,]
+    }
+  }
+  return(chain)
+}
+```
+
+```{r 2a, echo=TRUE,fig.height = 3, fig.width = 6}
+set.seed(30027)
+#start value
+startvalue1 = c(1,1)
+startvalue2 = c(5,0.1)
+
+iteration = 10000
+
+#MH
+MH_chain1 = metropolis_hastings(startvalue1,iteration)
+MH_chain2 = metropolis_hastings(startvalue2,iteration)
+
+# Trace plot of mu
+plot(MH_chain1[,1], type = "l", xlab="iteration",
+     main = "Trace plot of mu",col = "red" )
+points(MH_chain2[,1],type="l", col="blue")
+
+# Trace plot of tau
+plot(MH_chain1[,2], type = "l", xlab="iteration",
+     main = "Trace plot of tau", col = "red")
+points(MH_chain2[,2],type="l", col="blue")
+```
+
+\newpage
+
+##2(b)
+1)Marginal posterior distribution
+```{r 2b, echo=TRUE,fig.height = 3, fig.width = 6}
+#combine 2 simulations
+MH_chain = list(mu =c(tail(MH_chain1[,1],iteration/2),
+                      tail(MH_chain2[,1],iteration/2))
+               ,tau =c(tail(MH_chain1[,2],iteration/2),
+                       tail(MH_chain2[,2],iteration/2)))
+
+#marginal posterior distribution pf mu
+plot(density(MH_chain$mu), main="simulated pdf of mu ", xlab="mu", lwd=2)
+
+#marginal posterior distribution pf tau
+plot(density(MH_chain$tau), main="simulated pdf of tau ", xlab="tau", lwd=2)
 ```
 
 
-# Posterior distribution after discarding the first 50 samples as a burn-in.
+2)posterior mean
 ```{r}
-par(mfrow=c(3,1), mar=c(4,4,1,1))
-plot(density(GibbsS1[-(1:50),1]), ylab="posterior dist", xlab="lambda1", main="")
-plot(density(GibbsS1[-(1:50),2]), ylab="posterior dist", xlab="lambda2", main="")
-plot(table(GibbsS1[-(1:50),3])/nreps, ylab="posterior dist", xlab="M", main="")
+#posterior mean of mu
+(mu_hat = mean(MH_chain$mu))
+
+#posterior mean of tau
+(tau_hat = mean(MH_chain$tau))
 ```
 
+3)
+```{r}
+
+#credible interval of mu
+(credible_interval(MH_chain$mu))
+
+#credible interval of tau
+(credible_interval(MH_chain$tau))
