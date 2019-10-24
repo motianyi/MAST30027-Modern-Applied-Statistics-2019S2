@@ -1,7 +1,7 @@
 ---
 title: "MAST30027Assignment4"
 author: "Tianyi Mo"
-date: "2019Äê10ÔÂ24ÈÕ"
+date: "October 24,2019"
 output: pdf_document
 ---
 
@@ -28,3 +28,86 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# load data
+```{r}
+library(boot)
+data(coal)
+str(coal)
+when <- floor(coal)
+year <- 1851:1962
+freq <- sapply(year, function(x, y) sum(y==x), y=when)
+str(freq)
+n <- length(freq)
+plot(year, freq)
+```
+
+# Implement Gibbs Sampler 
+```{r}
+GibbsS <- function(la1, la2, M, nreps, freq){
+
+  # priors; uniform for M
+  a1 <- .5
+  b1 <- .001
+  a2 <- .5
+  b2 <- .001
+
+  Gsamples <- matrix(nrow=nreps, ncol=3)
+  Gsamples[1,] <- c(la1, la2, M)
+
+  # main loop
+  cfreq <- cumsum(freq)
+  for (i in 2:nreps) {
+    la1 <- rgamma(1, a1 + cfreq[M], b1 + M)
+    la2 <- rgamma(1, a2 + cfreq[n] - cfreq[M], b2 + n - M)
+    M <- sample(1:n, 1, prob=(la1/la2)^cfreq*exp((la2-la1)*(1:n)))
+    Gsamples[i,] <- c(la1, la2, M)
+  }
+
+  return(Gsamples=Gsamples)
+}
+```
+
+# Simulate two Markov Chains (of length 500) using Gibbs Sampler
+```{r}
+# sample size
+nreps <- 500
+
+# initial values
+la1 <- 1
+la2 <- 1
+M <- 100
+
+GibbsS1 = GibbsS(la1, la2, M, nreps, freq)
+
+# initial values
+la1 <- 3
+la2 <- 3
+M <- 50
+
+GibbsS2 = GibbsS(la1, la2, M, nreps, freq)
+```
+
+
+# trace plot
+```{r}
+par(mfrow=c(3,1), mar=c(4,4,1,1))
+plot(1:nreps, GibbsS1[,1], type="l", col="red", ylim = c(0, max(GibbsS1[,1],GibbsS2[,1])), xlab = "iteration", ylab ="lambda1")
+points(1:nreps, GibbsS2[,1], type="l", col="blue")
+
+plot(1:nreps, GibbsS1[,2], type="l", col="red", ylim = c(0, max(GibbsS1[,2],GibbsS2[,2])), xlab = "iteration", ylab ="lambda2")
+points(1:nreps, GibbsS2[,2], type="l", col="blue")
+
+plot(1:nreps, GibbsS1[,3], type="l", col="red", ylim = c(0, max(GibbsS1[,3],GibbsS2[,3])), xlab = "iteration", ylab ="M")
+points(1:nreps, GibbsS2[,3], type="l", col="blue")
+```
+
+
+# Posterior distribution after discarding the first 50 samples as a burn-in.
+```{r}
+par(mfrow=c(3,1), mar=c(4,4,1,1))
+plot(density(GibbsS1[-(1:50),1]), ylab="posterior dist", xlab="lambda1", main="")
+plot(density(GibbsS1[-(1:50),2]), ylab="posterior dist", xlab="lambda2", main="")
+plot(table(GibbsS1[-(1:50),3])/nreps, ylab="posterior dist", xlab="M", main="")
+```
+
