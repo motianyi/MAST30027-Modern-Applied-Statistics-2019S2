@@ -59,8 +59,11 @@ set.seed(30027)
 m = 1000
 
 #generate 2 samples from gibbs sampler with different initial value
-gibbsam1 = GibbsS(7,0.01,m)
-gibbsam2 = GibbsS(3,0.9,m)
+gibbsam1 = GibbsS(1,0.1,m)
+gibbsam2 = GibbsS(10,2,m)
+# 
+# gibbsam1 = GibbsS(7,0.01,m)
+# gibbsam2 = GibbsS(3,0.9,m)
 
 par(mfrow=c(1,1), mar = c(4,4,1,1))
 
@@ -68,6 +71,7 @@ par(mfrow=c(1,1), mar = c(4,4,1,1))
 plot(x=1:m, gibbsam1$mu, type="l", col="red", ylim = c(0, max(gibbsam1$mu,gibbsam2$mu)), 
      xlab = "iteration", ylab ="mu",main = "Trace plot of mu")
 points(1:m, gibbsam2$mu, type="l", col="blue")
+legend(700,3,legend = c("chain1", "chain2"),col=c("red","blue"),lty = 1:1)
 
 #trace plot tau
 plot(1:m, gibbsam1$tau, type="l", col="red", ylim = c(0, max(gibbsam1$tau,gibbsam2$tau)), 
@@ -109,13 +113,10 @@ credible_interval <- function(simulation){
   #sort the simulation ascending order
   ascending = sort(simulation,decreasing = FALSE)
   
-  #sort the simulation descending order
-  descending = sort(simulation,decreasing = TRUE)
-  
   x = 1:length(simulation)/length(simulation)
   
   #Conservative statistics
-  interval = c(descending[which(x>=0.95)[1]],ascending[which(x>=0.95)[1]])
+  interval = c(ascending[which(x>=0.05)[1]],ascending[which(x>=0.95)[1]])
   
   return(interval)
 }
@@ -150,6 +151,9 @@ likelihood <- function(param){
 
 # posterior distribution
 posterior <- function(param){
+  
+  # n = 100
+  # return((-n/2+1)*log(1/param[2])+-param[2]*sum((data-param[1])^2)/2)
   return(likelihood(param) + prior(param))
 }
 
@@ -162,6 +166,12 @@ proposalfunction <- function(param){
   return(c(proposal_mu, proposal_tau))
 }
 
+#log transition probability
+logtransition <- function(old,new){
+  return(log(dnorm(new[1],old[1],sqrt(new[2]))) +
+           log(dgamma(new[2],shape = 5*old[2],rate=5)))
+}
+
 # metropolis hastings
 metropolis_hastings <- function(startvalue, iterations){
   chain = array(dim = c(iterations+1, 2))
@@ -169,7 +179,9 @@ metropolis_hastings <- function(startvalue, iterations){
   
   for(i in 1:iterations){
     proposal = proposalfunction(chain[i,])
-    probab = exp(posterior(proposal) - posterior(chain[i,]))
+    probab = exp(posterior(proposal) - posterior(chain[i,]) 
+                 + logtransition(proposal,chain[i,])
+                 - logtransition(chain[i,],proposal))
     if(runif(1) < probab){
       chain[i+1,] = proposal
     }else{
@@ -183,10 +195,10 @@ metropolis_hastings <- function(startvalue, iterations){
 ```{r 2a, echo=TRUE,fig.height = 3, fig.width = 6}
 set.seed(30027)
 #start value
-startvalue1 = c(1,1)
-startvalue2 = c(5,0.1)
+startvalue1 = c(2,1)
+startvalue2 = c(6,0.1)
 
-iteration = 10000
+iteration = 1000
 
 #MH
 MH_chain1 = metropolis_hastings(startvalue1,iteration)

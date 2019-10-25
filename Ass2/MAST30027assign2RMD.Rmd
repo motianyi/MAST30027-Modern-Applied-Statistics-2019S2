@@ -17,10 +17,6 @@ Student ID: 875556
 Tutorial time: Tue 2.15pm
 
 Tutor: Qiuyi Li
-```{r}
-# Load the dataset
-d = 1+2
-```
 
 
 #1.Introduction

@@ -27,7 +27,6 @@ m = 10000
 gibbsam1 = GibbsS(7,0.01,m)
 gibbsam2 = GibbsS(3,0.9,m)
 
-#
 par(mfrow=c(1,1))
 
 #trace plot mu
@@ -130,8 +129,8 @@ hist(chain1[-(1:burnIn),1],nclass=30, , main="Posterior of a", xlab="True value 
 # hist(chain2[-(1:burnIn),1],nclass=30, , main="Posterior of a", xlab="True value = red line" ,col = "red")
 abline(v = mean(chain[-(1:burnIn),1]), col="green")
 # abline(v = trueA, col="red" )
-hist(chain[-(1:burnIn),2],nclass=30, main="Posterior of b", xlab="True value = red line")
-abline(v = mean(chain[-(1:burnIn),2]), col="green")
+hist(chain1[-(1:burnIn),2],nclass=30, main="Posterior of b", xlab="True value = red line")
+abline(v = mean(chain2[-(1:burnIn),2]), col="green")
 # abline(v = trueB, col="red" )
 
 plot(chain1[-(1:burnIn),1], type = "l", xlab="True value = red line" , main = "Chain values of a",col = "red" )
