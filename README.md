@@ -1,0 +1,4 @@
+# MAST30027ModernAppliedStatistics2019S2
+MAST30027ModernAppliedStatistics
+
+MC simulations written in R
